@@ -1,0 +1,15 @@
+node_modules/
+dist/
+*.local
+.DS_Store
+.vscode/
+.idea/
+*.log
+
+# 建模时用的第三方参考资料，不随仓库分发：
+#   src/image/  —— 从网上找的鸟巢实景与座位图截图，版权不属于本项目
+#   src/model/  —— 第三方 SketchUp 模型（niaochao1.skp）
+# 它们只在开发时用来量尺寸和取配色，运行时代码一行都不引用。
+# 源码注释里提到的那些文件名指的就是这里，克隆后不会有——那是刻意的。
+src/image/
+src/model/
