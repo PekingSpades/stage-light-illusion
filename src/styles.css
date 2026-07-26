@@ -616,6 +616,13 @@ body.panel-collapsed #panel-toggle {
 }
 
 /* 原生 range 留在 DOM 里但透明：键盘与读屏靠它，指针交互靠整行 */
+/*
+ * 隐形的原生 range：留着是为了键盘和读屏——它才是这一行真正的可及控件。
+ * 但**不能让它接指针**：原生 range 在触屏上"点哪儿跳哪儿"，
+ * 而它铺满整行，于是在参数抽屉里随手一点就改掉一个参数（实测 48→83）。
+ * 指针输入统一交给 .enc 自己的处理器（含方向判定，见 panel.js）；
+ * pointer-events: none 不影响 Tab 聚焦，键盘方向键照旧可用。
+ */
 .enc-native {
   position: absolute;
   inset: 0;
@@ -623,7 +630,7 @@ body.panel-collapsed #panel-toggle {
   height: 100%;
   margin: 0;
   opacity: 0;
-  cursor: ew-resize;
+  pointer-events: none;
 }
 
 /* 开关行 */

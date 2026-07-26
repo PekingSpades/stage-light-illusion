@@ -89,23 +89,68 @@ function createEncoder(item, state, onChange, getDefault) {
 
   native.addEventListener('input', () => commit(parseFloat(native.value)));
 
-  // 指针拖拽：整行横向拖 360px 走完全程；按住 Shift 精调到 1/10
-  let dragging = false;
+  /*
+   * 指针拖拽：整行横向拖 360px 走完全程；按住 Shift 精调到 1/10。
+   *
+   * 触屏上这件事和"抽屉要能纵向滚"直接冲突，早先版本两处都做错了：
+   *
+   *   1. `.enc-native` 是一个 opacity:0 铺满整行的原生 range，触屏事件先落在它身上，
+   *      而原生 range 的默认行为是**点哪儿就跳到哪儿的值**——所以在参数抽屉里
+   *      随便点一下（比如想停住惯性滚动），那一行的参数就被改掉了，
+   *      点在行右侧甚至会直接跳到接近最大值。实测「灯数量」单击一次 48→83。
+   *   2. 本行的 pointerdown 一进来就 `dragging = true`，于是竖滑只要带一点横向分量，
+   *      pointermove 立刻开始改值。浏览器要过一会儿才判定成滚动并发 pointercancel，
+   *      但值早就动了。实测横 40px / 竖 200px 的斜滑：抽屉滚了，值也被改了。
+   *
+   * 现在：原生 range 交出指针（`pointer-events: none`，见 styles.css），
+   * 全部指针输入由本行接管；触屏先进入 pending，**等手势自己证明是横向的**才接管。
+   * 一旦先越过纵向阈值就永久判给滚动，本次手势再横move 也不改值——
+   * 宁可少改一次，也不要在滑动列表时误改参数。
+   */
+  const SLOP = 10; // 判定方向前允许的自由移动（px）
+  let mode = null; // null | 'pending'（触屏待判定）| 'drag' | 'scroll'（本次手势已让给滚动）
+  let startX = 0;
+  let startY = 0;
   let lastX = 0;
   let acc = 0;
 
-  row.addEventListener('pointerdown', (e) => {
-    if (e.target === native && e.pointerType !== 'mouse') return;
-    dragging = true;
-    lastX = e.clientX;
+  const beginDrag = (e) => {
+    mode = 'drag';
+    lastX = e.clientX; // 从判定那一刻算起，别把 slop 那段也折进值里
     acc = state[item.key];
     row.classList.add('is-active');
     row.setPointerCapture(e.pointerId);
-    e.preventDefault();
+  };
+
+  row.addEventListener('pointerdown', (e) => {
+    startX = e.clientX;
+    startY = e.clientY;
+    if (e.pointerType === 'mouse') {
+      // 鼠标没有"拖着滚动"这回事，不存在歧义，直接进入拖拽
+      beginDrag(e);
+      native.focus({ preventScroll: true }); // 点完能接着用方向键微调
+      e.preventDefault(); // 免得拖出一片文字选区
+    } else {
+      mode = 'pending';
+      lastX = e.clientX;
+      acc = state[item.key];
+    }
   });
 
   row.addEventListener('pointermove', (e) => {
-    if (!dragging) return;
+    if (mode === 'pending') {
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      const ax = Math.abs(dx);
+      const ay = Math.abs(dy);
+      if (ay > SLOP && ay >= ax) {
+        mode = 'scroll'; // 纵向先越线 → 这一下是滚动，本次手势不再改值
+      } else if (ax > SLOP && ax > ay) {
+        beginDrag(e);
+      }
+      return;
+    }
+    if (mode !== 'drag') return;
     const dx = e.clientX - lastX;
     lastX = e.clientX;
     acc += (dx / 360) * span * (e.shiftKey ? 0.1 : 1);
@@ -113,8 +158,10 @@ function createEncoder(item, state, onChange, getDefault) {
   });
 
   const end = (e) => {
-    if (!dragging) return;
-    dragging = false;
+    if (mode === null) return;
+    const wasDrag = mode === 'drag';
+    mode = null;
+    if (!wasDrag) return; // pending 状态松手 = 只是点了一下，什么都不该发生
     row.classList.remove('is-active');
     if (e.pointerId !== undefined && row.hasPointerCapture?.(e.pointerId)) {
       row.releasePointerCapture(e.pointerId);
