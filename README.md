@@ -543,7 +543,7 @@ fork 之后把那个文件里 `push` 触发的注释去掉就能用，再把 Pag
 
 ## 许可
 
-[MIT](LICENSE) © 2026 Yihang Huang
+[MIT](LICENSE) © 2026 PekingSpades
 
 仓库里不包含建模时参考的第三方素材（网上找的鸟巢实景截图、第三方 SketchUp 模型），
 它们的版权不属于本项目，因此列在 `.gitignore` 里。
