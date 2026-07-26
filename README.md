@@ -17,7 +17,6 @@
   <img alt="three.js" src="https://img.shields.io/badge/three.js-0.185-4dd9f0">
   <img alt="Vite" src="https://img.shields.io/badge/Vite-8-ffc233">
   <img alt="No framework" src="https://img.shields.io/badge/framework-none-6e7787">
-  <a href="../../actions/workflows/deploy.yml"><img alt="Deploy" src="../../actions/workflows/deploy.yml/badge.svg"></a>
 </p>
 
 > **In English** — Light travels in straight lines, yet at a concert the beams
@@ -526,6 +525,21 @@ npm run dev      # 开发服务器
 npm run build    # 产物到 dist/
 npm run preview  # 本地预览产物
 ```
+
+## 部署
+
+线上版本是 GitHub Pages，来源是 `gh-pages` 分支上的构建产物：
+
+```bash
+npm run build
+touch dist/.nojekyll     # 免得 Pages 按 Jekyll 处理下划线开头的文件
+# 再把 dist/ 的内容推到 gh-pages 分支即可
+```
+
+仓库里另有一份 `.github/workflows/deploy.yml`，是标准的 Actions 部署流程
+（`configure-pages` → `upload-pages-artifact` → `deploy-pages`），
+目前设成**只手动触发**——本仓库所属账号的 Actions 被锁，自动触发会每次失败。
+fork 之后把那个文件里 `push` 触发的注释去掉就能用，再把 Pages 来源切成 GitHub Actions。
 
 ## 许可
 

@@ -1,9 +1,14 @@
 name: Deploy to GitHub Pages
 
+# 目前只手动触发。仓库所属账号的 Actions 因账单问题被锁，push 触发会每次都失败，
+# 在 README 上挂一个红徽章、并且每次推送都发失败通知。
+# 账号恢复后，把下面 push 那三行的注释去掉即可切回自动部署，
+# 同时要把 Pages 的来源从 gh-pages 分支切回 GitHub Actions：
+#   gh api -X PUT repos/<owner>/<repo>/pages -f build_type=workflow
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
+  # push:
+  #   branches: [main]
 
 # 只授出发布 Pages 所需的最小权限
 permissions:
