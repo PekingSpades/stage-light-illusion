@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0d10" />
+    <title>光束实验室 · 演唱会舞台光束错觉 3D 拆解</title>
+    <meta
+      name="description"
+      content="用 3D 还原并解释演唱会四面台上'光线拐弯'的视觉效果：一族笔直的光束，如何在你眼里织出一条流动的曲线。"
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230b0d10'/%3E%3Cg stroke='%234dd9f0' stroke-width='1.1' stroke-linecap='round'%3E%3Cpath d='M3 28 L28 12'/%3E%3Cpath d='M7 28 L28 17'/%3E%3Cpath d='M11 28 L28 22'/%3E%3Cpath d='M15 28 L28 27'/%3E%3C/g%3E%3Cpath d='M3 28 Q17 26 28 12' fill='none' stroke='%23ffc233' stroke-width='1.6'/%3E%3C/svg%3E"
+    />
+
+    <!-- ---------------------------------------------------------------- SEO -->
+    <link rel="canonical" href="https://pekingspades.github.io/stage-light-illusion/" />
+    <meta name="author" content="PekingSpades" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="color-scheme" content="dark" />
+
+    <!-- ------------------------------------------------- Open Graph / 微信·微博·Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="光束实验室 BEAM LAB" />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:url" content="https://pekingspades.github.io/stage-light-illusion/" />
+    <meta property="og:title" content="光束实验室 · 演唱会舞台光束错觉 3D 拆解" />
+    <meta
+      property="og:description"
+      content="光沿直线传播，可演唱会现场那些光束偏偏在弯。这是一个可自由漫游的 3D 演示：一族笔直的光束如何在你眼里织出一条流动的曲线，以及为什么换个座位曲线就变了样。"
+    />
+    <meta property="og:image" content="https://pekingspades.github.io/stage-light-illusion/og-cover.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="2400" />
+    <meta property="og:image:height" content="1260" />
+    <meta
+      property="og:image:alt"
+      content="鸟巢四面台上空，一圈摇头灯射出的笔直光束在视觉上交织成一条金色曲线"
+    />
+
+    <!-- ------------------------------------------------------------ Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="光束实验室 · 演唱会舞台光束错觉 3D 拆解" />
+    <meta
+      name="twitter:description"
+      content="光沿直线传播，可演唱会现场那些光束偏偏在弯。一个可自由漫游的 3D 演示，讲清楚这条曲线到底是什么。"
+    />
+    <meta name="twitter:image" content="https://pekingspades.github.io/stage-light-illusion/og-cover.jpg" />
+    <meta
+      name="twitter:image:alt"
+      content="鸟巢四面台上空，一圈摇头灯射出的笔直光束在视觉上交织成一条金色曲线"
+    />
+
+    <!-- --------------------------------------------------- 结构化数据（搜索结果富摘要） -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "光束实验室 BEAM LAB",
+        "alternateName": "Stage Light Illusion",
+        "url": "https://pekingspades.github.io/stage-light-illusion/",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Any (WebGL2)",
+        "inLanguage": "zh-CN",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "author": { "@type": "Person", "name": "PekingSpades" },
+        "license": "https://opensource.org/licenses/MIT",
+        "description": "用 3D 还原并解释演唱会四面台上「光线拐弯」的视觉效果：光束本身是直线，看到的曲线是这族直线的包络，且大多数情况下只存在于投影里，因此换个座位形状就变。",
+        "keywords": "舞台灯光, 光束, 包络, 直纹曲面, three.js, WebGL, 鸟巢, 演唱会, 视觉错觉"
+      }
+    </script>
+
+    <script type="module" crossorigin src="./assets/index-CNiSv7yW.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-4TKhJaZS.css">
+  </head>
+  <body>
+    <canvas id="scene"></canvas>
+    <canvas id="overlay" aria-hidden="true"></canvas>
+    <div id="hotspots" aria-label="场景内机位"></div>
+
+    <header id="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-name" id="intro-title"></span>
+        <span class="brand-sub" id="intro-subtitle"></span>
+      </div>
+      <nav id="chapters" aria-label="演示章节">
+        <span class="seq-head">
+          章节 <span class="seq-head-en">CUE</span>
+          <b class="seq-count" id="seq-count"></b>
+        </span>
+        <div class="seq-track" id="seq-track"></div>
+        <span class="seq-title" id="seq-title"></span>
+      </nav>
+      <div class="topbar-status">
+        <button id="freeze-btn" class="chip" type="button" aria-pressed="false">
+          <span class="chip-key">空格</span>冻结
+        </button>
+        <span id="stats" class="readout" role="status"></span>
+      </div>
+    </header>
+
+    <aside id="rail" aria-label="参数">
+      <div class="rail-head">
+        <h2>参数 <span class="rail-head-en">PROGRAMMER</span></h2>
+        <button id="panel-toggle" class="icon-btn" type="button" aria-expanded="true" aria-label="折叠参数面板">
+          ›
+        </button>
+      </div>
+      <div id="panel-body"></div>
+      <section id="plan-wrap">
+        <div class="rail-sub">
+          <h3>平面图 <span class="rail-head-en">PLOT</span></h3>
+          <span class="rail-sub-hint">点机位飞过去 · 点灯位独奏</span>
+        </div>
+        <canvas id="plan" width="288" height="288" role="img" aria-label="舞台平面图：显示灯位与机位"></canvas>
+        <div id="plan-views" class="plan-views" aria-label="特殊视角"></div>
+        <p class="plan-tip">点空白处就站到那儿 · 按住可以走</p>
+        <div id="plan-a11y" class="sr-only"></div>
+      </section>
+      <section id="cam-list" aria-label="机位"></section>
+    </aside>
+
+    <div id="encbar">
+      <div id="encoders" aria-label="常用参数"></div>
+      <div class="encbar-tail">
+        <div id="timeline-wrap">
+          <label for="timeline" class="enc-label">时间 <span class="enc-en">TIME</span></label>
+          <input id="timeline" type="range" min="0" max="1" step="0.001" value="0" aria-label="时间轴" />
+        </div>
+        <div id="keyhelp">
+          <kbd>空格</kbd>推进/冻结 <kbd>←</kbd><kbd>→</kbd>章节 <kbd>1</kbd>–<kbd>9</kbd>机位 <kbd>点灯</kbd>独奏
+          <kbd>F</kbd>特写 <kbd>H</kbd>隐藏
+        </div>
+      </div>
+    </div>
+
+    <section id="npc" data-state="idle" data-mood="talk" aria-label="讲解">
+      <div class="npc-box" role="button" tabindex="0" aria-describedby="npc-live">
+        <div class="npc-portrait" aria-hidden="true">
+          <svg class="npc-avatar" viewBox="0 0 72 72" width="72" height="72">
+            <defs>
+              <radialGradient id="npcBg" cx="50%" cy="34%" r="72%">
+                <stop offset="0%" stop-color="#1d2634" />
+                <stop offset="100%" stop-color="#0a0d14" />
+              </radialGradient>
+              <linearGradient id="npcBeam" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#ffc233" stop-opacity="0.34" />
+                <stop offset="100%" stop-color="#ffc233" stop-opacity="0" />
+              </linearGradient>
+              <clipPath id="npcClip"><circle cx="36" cy="36" r="35" /></clipPath>
+            </defs>
+            <g clip-path="url(#npcClip)">
+              <rect width="72" height="72" fill="url(#npcBg)" />
+              <path d="M36 -6 L64 40 L8 40 Z" fill="url(#npcBeam)" />
+              <path d="M8 72 q6 -18 28 -18 t28 18 z" fill="#161c27" />
+              <path d="M27 56 l4 16 M45 56 l-4 16" stroke="#3a4459" stroke-width="2.4" fill="none" />
+              <rect x="31.5" y="41" width="9" height="10" rx="3" fill="#b3805a" />
+              <ellipse cx="36" cy="31" rx="12.4" ry="13.6" fill="#d3a077" />
+              <path d="M23.6 29 q1.4 -13 12.4 -13 t12.4 13 q-3 -6.5 -12.4 -6.5 T23.6 29z" fill="#242a36" />
+              <ellipse cx="30.6" cy="30.4" rx="1.5" ry="1.8" fill="#2a2016" />
+              <ellipse cx="41.4" cy="30.4" rx="1.5" ry="1.8" fill="#2a2016" />
+              <path
+                d="M27.6 25.6 q3 -1.6 6 -0.2 M38.4 25.4 q3 -1.4 6 0.2"
+                stroke="#2c2230"
+                stroke-width="1.5"
+                fill="none"
+                stroke-linecap="round"
+              />
+              <ellipse class="npc-mouth" cx="36" cy="38.2" rx="3.2" ry="1.5" fill="#8d5b41" />
+              <rect x="19.5" y="26" width="6.4" height="12" rx="3" fill="#232b3a" />
+              <rect x="46.1" y="26" width="6.4" height="12" rx="3" fill="#232b3a" />
+              <path d="M22.7 26 q13.3 -14 26.6 0" stroke="#232b3a" stroke-width="3.2" fill="none" />
+              <path d="M25 34 q6 3 8 6.4" stroke="#2b3446" stroke-width="2" fill="none" stroke-linecap="round" />
+              <circle class="npc-led" cx="33.4" cy="41" r="1.5" fill="#4dd9f0" />
+            </g>
+            <circle cx="36" cy="36" r="34.4" fill="none" stroke="#333a45" stroke-width="1.2" />
+          </svg>
+        </div>
+        <div class="npc-main">
+          <div class="npc-head">
+            <span class="npc-name">老陆</span>
+            <span class="npc-role">灯光总监</span>
+            <span class="npc-progress" id="npc-progress"></span>
+          </div>
+          <p class="npc-text" id="npc-text" aria-hidden="true"></p>
+          <p class="sr-only" id="npc-live" role="status" aria-live="polite"></p>
+          <div class="npc-foot">
+            <span class="npc-next" id="npc-next" aria-hidden="true">继续 <i>▼</i></span>
+            <span class="npc-tools">
+              <button id="npc-auto" class="mini-btn" type="button" aria-pressed="false">自动 <kbd>A</kbd></button>
+              <button id="npc-collapse" class="mini-btn" type="button">收起 <kbd>C</kbd></button>
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <button id="npc-restore" class="chip chip--float" type="button" hidden>展开讲解 <kbd>C</kbd></button>
+
+    <!-- 触摸设备的工具栏。图标一律用内联 SVG：符号字形在很多设备的字体里缺失，会渲成豆腐块 -->
+    <nav id="mobilebar" aria-label="工具栏">
+      <button class="mb" type="button" data-sheet="talk" aria-pressed="true">
+        <svg class="mb-ico" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M3 4h14v9H8l-4 4v-4H3z" />
+        </svg>
+        讲解
+      </button>
+      <button class="mb" type="button" data-sheet="plan">
+        <svg class="mb-ico" viewBox="0 0 20 20" aria-hidden="true">
+          <rect x="2.5" y="2.5" width="15" height="15" rx="1" />
+          <path d="M2.5 7.5h15M2.5 12.5h15M7.5 2.5v15M12.5 2.5v15" />
+        </svg>
+        平面图
+      </button>
+      <button class="mb" type="button" data-sheet="cams">
+        <svg class="mb-ico" viewBox="0 0 20 20" aria-hidden="true">
+          <circle cx="10" cy="10" r="6.5" />
+          <circle cx="10" cy="10" r="1.8" />
+          <path d="M10 1.5v2M10 16.5v2M1.5 10h2M16.5 10h2" />
+        </svg>
+        机位
+      </button>
+      <button class="mb" type="button" data-sheet="params">
+        <svg class="mb-ico" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M2.5 5.5h15M2.5 10h15M2.5 14.5h15" />
+          <circle cx="6.5" cy="5.5" r="1.9" />
+          <circle cx="13" cy="10" r="1.9" />
+          <circle cx="8" cy="14.5" r="1.9" />
+        </svg>
+        参数
+      </button>
+      <button class="mb" type="button" data-act="freeze" aria-pressed="false">
+        <svg class="mb-ico" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M7 4v12M13 4v12" />
+        </svg>
+        冻结
+      </button>
+    </nav>
+
+  </body>
+</html>
